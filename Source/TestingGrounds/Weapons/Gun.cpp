@@ -38,6 +38,8 @@ void AGun::Tick(float DeltaTime) {
 
 
 void AGun::OnFire() {
+
+	UE_LOG(LogTemp, Warning, TEXT("Firing!"))
 	// try and fire a projectile
 	if (ProjectileClass != NULL) {
 		UWorld* const World = GetWorld();

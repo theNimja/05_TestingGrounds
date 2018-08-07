@@ -10,13 +10,14 @@
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
 
+#include "../Weapons/Gun.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 //////////////////////////////////////////////////////////////////////////
 // AFirstPersonCharacter
 
-AFirstPersonCharacter::AFirstPersonCharacter()
-{
+AFirstPersonCharacter::AFirstPersonCharacter() {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
@@ -57,34 +58,39 @@ AFirstPersonCharacter::AFirstPersonCharacter()
 	//bUsingMotionControllers = true;
 }
 
-void AFirstPersonCharacter::BeginPlay()
-{
+void AFirstPersonCharacter::BeginPlay() {
 	// Call the base class  
 	Super::BeginPlay();
 
 
-	//TODO move this to Gun somehow
+
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	//FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
-	if (bUsingMotionControllers)
-	{
+	if (bUsingMotionControllers) {
 		//VR_Gun->SetHiddenInGame(false, true);
 		Mesh1P->SetHiddenInGame(true, true);
-	}
-	else
-	{
+	} else {
 		//VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
+
+	if (GunBlueprint == NULL) {
+		UE_LOG(LogTemp, Warning, TEXT("Gun Blueprint missing!"))
+			return;
+	}
+	Gun = GetWorld()->SpawnActor<AGun>(GunBlueprint);
+	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	Gun->AnimInstance = Mesh1P->GetAnimInstance();
+
+
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AFirstPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
-{
+void AFirstPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
@@ -93,8 +99,7 @@ void AFirstPersonCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	// Bind fire event
-	//TODO move this to Gun somehow
-	//PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AFirstPersonCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AFirstPersonCharacter::OnFire);
 
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
@@ -114,19 +119,15 @@ void AFirstPersonCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AFirstPersonCharacter::LookUpAtRate);
 }
 
-void AFirstPersonCharacter::OnResetVR()
-{
+void AFirstPersonCharacter::OnResetVR() {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void AFirstPersonCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	if (TouchItem.bIsPressed == true)
-	{
+void AFirstPersonCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location) {
+	if (TouchItem.bIsPressed == true) {
 		return;
 	}
-	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false))
-	{
+	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false)) {
 		//OnFire();
 	}
 	TouchItem.bIsPressed = true;
@@ -135,10 +136,8 @@ void AFirstPersonCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, cons
 	TouchItem.bMoved = false;
 }
 
-void AFirstPersonCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	if (TouchItem.bIsPressed == false)
-	{
+void AFirstPersonCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location) {
+	if (TouchItem.bIsPressed == false) {
 		return;
 	}
 	TouchItem.bIsPressed = false;
@@ -182,40 +181,32 @@ void AFirstPersonCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const 
 //	}
 //}
 
-void AFirstPersonCharacter::MoveForward(float Value)
-{
-	if (Value != 0.0f)
-	{
+void AFirstPersonCharacter::MoveForward(float Value) {
+	if (Value != 0.0f) {
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
-void AFirstPersonCharacter::MoveRight(float Value)
-{
-	if (Value != 0.0f)
-	{
+void AFirstPersonCharacter::MoveRight(float Value) {
+	if (Value != 0.0f) {
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
-void AFirstPersonCharacter::TurnAtRate(float Rate)
-{
+void AFirstPersonCharacter::TurnAtRate(float Rate) {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void AFirstPersonCharacter::LookUpAtRate(float Rate)
-{
+void AFirstPersonCharacter::LookUpAtRate(float Rate) {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-bool AFirstPersonCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent)
-{
-	if (FPlatformMisc::SupportsTouchInput() || GetDefault<UInputSettings>()->bUseMouseForTouch)
-	{
+bool AFirstPersonCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent) {
+	if (FPlatformMisc::SupportsTouchInput() || GetDefault<UInputSettings>()->bUseMouseForTouch) {
 		PlayerInputComponent->BindTouch(EInputEvent::IE_Pressed, this, &AFirstPersonCharacter::BeginTouch);
 		PlayerInputComponent->BindTouch(EInputEvent::IE_Released, this, &AFirstPersonCharacter::EndTouch);
 
@@ -223,6 +214,13 @@ bool AFirstPersonCharacter::EnableTouchscreenMovement(class UInputComponent* Pla
 		//PlayerInputComponent->BindTouch(EInputEvent::IE_Repeat, this, &AFirstPersonCharacter::TouchUpdate);
 		return true;
 	}
-	
+
 	return false;
+}
+
+
+void AFirstPersonCharacter::OnFire() {
+	if (ensure(Gun)) {
+		Gun->OnFire();
+	}
 }

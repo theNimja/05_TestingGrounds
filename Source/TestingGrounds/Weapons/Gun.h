@@ -35,7 +35,9 @@ public:
 		class UAnimMontage* FireAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	class UAnimInstance* AnimInstance;
+		class UAnimInstance* AnimInstance;
+
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -45,8 +47,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-protected:
 	/** Fires a projectile. */
 	void OnFire();
+
 
 };

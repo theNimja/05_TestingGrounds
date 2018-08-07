@@ -33,8 +33,16 @@ class AFirstPersonCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UMotionControllerComponent* L_MotionController;
 
+	
+
 public:
 	AFirstPersonCharacter();
+
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<class AGun> GunBlueprint;
+private:
+
+	AGun * Gun;
 
 protected:
 	virtual void BeginPlay();
@@ -113,5 +121,7 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+
+	void OnFire();
 };
 
