@@ -25,4 +25,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 		void PlaceActors(TSubclassOf<AActor> ToSpawn, int MinSpawned, int MaxSpawned);
 
+private:
+	bool CastSphere(FVector Location, float Radius);
+
+
 };
