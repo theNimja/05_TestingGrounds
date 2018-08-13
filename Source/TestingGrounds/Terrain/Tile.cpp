@@ -43,8 +43,8 @@ bool ATile::GetEmptyLocation(FVector& OutLocation, float Radius) {
 	FVector SpawnPoint;
 	const int MAX_ATTEMPTS = 30;
 	for (size_t i = 0; i < MAX_ATTEMPTS; i++) {
-		FVector Min = FVector(0, -2000, 0);
-		FVector Max = FVector(4000, 2000, 0);
+		FVector Min = FVector(-2000, -2000, 0);
+		FVector Max = FVector(2000, 2000, 0);
 		FBox Bounds = FBox(Min, Max);
 
 		SpawnPoint = FMath::RandPointInBox(Bounds);
