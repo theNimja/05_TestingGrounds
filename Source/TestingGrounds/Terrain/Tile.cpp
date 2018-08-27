@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "WorldCollision.h"
 #include "DrawDebugHelpers.h"
+#include "NavigationSystem.h"
 #include "ActorPool.h"
 
 
@@ -16,6 +17,8 @@ ATile::ATile() {
 
 	MaxExtent = FVector(2000, 2000, 0);
 	MinExtent = FVector(-2000, -2000, 0);
+
+	NavigationBoundsOffset = FVector(2000,0,0);
 }
 
 void ATile::SetPool(UActorPool* InPool) {
@@ -31,8 +34,10 @@ void ATile::PositionNavMeshBoundsVolume()
 		UE_LOG(LogTemp, Error, TEXT("[%s]Pool is empty."),*GetName());
 		return;
 	}
-	NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
-	UE_LOG(LogTemp, Error, TEXT("[%s] Checked out {%s}."),*GetName(),*NavMeshBoundsVolume->GetName());
+
+	UE_LOG(LogTemp, Error, TEXT("[%s] Checked out {%s}."), *GetName(), *NavMeshBoundsVolume->GetName());
+	NavMeshBoundsVolume->SetActorLocation(GetActorLocation()+NavigationBoundsOffset);
+	Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem())->Build();
 }
 
 
