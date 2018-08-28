@@ -77,7 +77,7 @@ void ATile::PlaceAIPawns(TSubclassOf<APawn> ToSpawn, int MinSpawned, int MaxSpaw
 
 	for (FSpawnPosition SpawnPosition : SpawnPositions) {
 		PlaceAIPawn(ToSpawn, SpawnPosition);
-	
+
 	}
 }
 
@@ -91,8 +91,18 @@ TArray<FSpawnPosition>  ATile::RandomSpawnPositions(int MinSpawned, int MaxSpawn
 		SpawnPosition.Scale = FMath::RandRange(MinScale, MaxScale);
 		bool Found = GetEmptyLocation(SpawnPosition.Location, Radius*SpawnPosition.Scale);
 		if (Found) {
-			SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
-			SpawnPositions.Add(SpawnPosition);
+			//we also need to check if the new spawn point is not too close to the other ones
+			bool Valid = true;
+			for (FSpawnPosition i : SpawnPositions) {
+				if ((i.Location - SpawnPosition.Location).Size() < Radius) {
+					Valid = false;
+					break;
+				}
+			}
+			if (Valid) {
+				SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
+				SpawnPositions.Add(SpawnPosition);
+			}
 		}
 	}
 
@@ -129,13 +139,14 @@ void ATile::PlaceActor(TSubclassOf<AActor> ToSpawn, FSpawnPosition SpawnPosition
 
 void ATile::PlaceAIPawn(TSubclassOf<APawn> ToSpawn, FSpawnPosition SpawnPosition) {
 	APawn* Spawned = GetWorld()->SpawnActor<APawn>(ToSpawn);
+	if (Spawned) {
+		Spawned->SetActorRelativeLocation(SpawnPosition.Location);
+		Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+		Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
 
-	Spawned->SetActorRelativeLocation(SpawnPosition.Location);
-	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
-	Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
-	
-	Spawned->SpawnDefaultController();
-	Spawned->Tags.Add(FName("Enemy"));
+		Spawned->SpawnDefaultController();
+		Spawned->Tags.Add(FName("Enemy"));
+	}
 }
 
 
